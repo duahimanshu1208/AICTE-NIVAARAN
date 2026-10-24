@@ -14,6 +14,51 @@
               saffron: '#E59A00', leaf: '#1F7A4D', sindoor: '#C23B2B', ochre: '#B7791F' }
   } } };
 </script>
+<script>
+  // Apply the saved (or system) theme before the page paints, so there is no flash
+  (function () {
+    var dark = false;
+    try {
+      var t = localStorage.getItem("aicteTheme");
+      dark = t ? t === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    } catch (_) {}
+    if (dark) document.documentElement.classList.add("dark");
+  })();
+</script>
+<style>
+  /* ---------- Dark mode ---------- */
+  html.dark { color-scheme: dark; }
+  .dark body { background: #0E1226; color: #E3E7F3; }
+  .dark header { background: #0A0E20; }
+  .dark .bg-white { background-color: #182039; }
+  .dark .bg-paper { background-color: #0E1226; }
+  .dark .bg-white .bg-paper, .dark .bg-paper.rounded, .dark #slip, .dark #m-desc, .dark thead { background-color: #111831; }
+  .dark .bg-line { background-color: #2B3558; }
+  .dark .bg-ink { background-color: #4357C4; }
+  .dark .hover\:bg-\[\#141c44\]:hover { background-color: #5468D6; }
+  .dark header .bg-white { background-color: #fff; }
+  .dark .text-ink { color: #B9C4FF; }
+  .dark .text-muted { color: #9BA6C6; }
+  .dark .text-slate-800 { color: #E3E7F3; }
+  .dark .text-sindoor { color: #FF8A78; }
+  .dark .text-ochre { color: #F0B454; }
+  .dark .text-leaf { color: #5FD39A; }
+  .dark .border-line, .dark .divide-line > * + * { border-color: #2B3558; }
+  .dark .border-ink, .dark .border-t-ink { border-color: #8FA0F0; }
+  .dark .border-t-ink { border-top-color: #6F82E8; }
+  .dark .focus\:border-ink:focus { border-color: #8FA0F0; }
+  .dark .border-muted { border-color: #7C88AB; }
+  .dark .border-muted\/50 { border-color: rgba(155,166,198,.5); }
+  .dark input, .dark select, .dark textarea { background-color: #0E1530; color: #E3E7F3; }
+  .dark input::placeholder, .dark textarea::placeholder { color: #7C88AB; }
+  .dark .bg-red-50 { background-color: #3A1A1F; }
+  .dark .border-red-200 { border-color: #6B2B33; }
+  .dark .bg-green-50 { background-color: #12301F; }
+  .dark .border-green-200 { border-color: #1F5A38; }
+  .dark tr.fresh { animation-name: freshDark; }
+  @keyframes freshDark { from { background: #4A3A10; } to { background: transparent; } }
+  .dark .role[aria-checked="true"] { box-shadow: 0 0 0 1px #8FA0F0; }
+</style>
 <style>
   :focus-visible { outline: 2px solid #E59A00; outline-offset: 2px; }
   .flag { height: 5px; background: linear-gradient(90deg, #FF9933 0 33.3%, #FFFFFF 33.3% 66.6%, #138808 66.6% 100%); }
@@ -30,14 +75,22 @@
 <header class="bg-ink text-white">
   <div class="flag"></div>
   <div class="max-w-7xl mx-auto px-4 md:px-8 py-5 flex flex-wrap items-center justify-between gap-3">
-    <div class="flex items-center gap-3">
-      <span id="hdrLogo" class="hidden flex h-12 w-12 shrink-0 items-center justify-center rounded bg-white p-1"><img alt="AICTE logo" class="logo-img h-full w-full object-contain"></span>
+    <div class="flex flex-wrap items-center gap-x-5 gap-y-3">
+      <div class="flex items-center gap-4">
+        <span id="hdrLogo" class="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white p-1"><img alt="AICTE logo" class="logo-img h-full w-full object-contain"></span>
+        <div>
+          <h1 class="font-display text-2xl md:text-3xl font-bold" data-hi="एकीकृत शिकायत निवारण डैशबोर्ड">AICTE Nivaaran</h1>
+          <p class="text-slate-300 mt-1">AICTE bureaus and cells</p>
+        </div>
+      </div>
+      <span class="hidden md:block h-12 w-px bg-white/25" aria-hidden="true"></span>
       <div>
-        <h1 class="font-display text-2xl md:text-3xl font-bold" data-hi="एकीकृत शिकायत निवारण डैशबोर्ड">AICTE Nivaaran</h1>
-        <p class="text-slate-300 mt-1">AICTE bureaus and cells</p>
+        <p class="font-display font-bold text-lg leading-tight" data-hi="अखिल भारतीय तकनीकी शिक्षा परिषद">All India Council for Technical Education</p>
+        <p class="text-sm text-slate-300 mt-0.5">Statutory body of the Government of India</p>
       </div>
     </div>
     <div class="flex flex-wrap items-center gap-3 text-sm">
+      <button id="themeToggle" type="button" aria-pressed="false" class="rounded border border-white/40 px-3 py-1.5 font-semibold hover:bg-white/10">Dark: Off</button>
       <button id="hiToggle" type="button" aria-pressed="true" class="rounded border border-white/40 px-3 py-1.5 font-semibold hover:bg-white/10">Hindi: On</button>
       <span id="whoText" class="hidden rounded-full bg-white/10 px-3 py-1.5"></span>
       <button id="logout" class="hidden rounded border border-white/40 px-3 py-1.5 font-semibold hover:bg-white/10" data-hi="बाहर निकलें" data-hi-in>Log out</button>
@@ -46,14 +99,33 @@
 </header>
 
 <!-- Login -->
-<section id="login" class="max-w-3xl mx-auto px-4 md:px-8 py-10 md:py-14" aria-labelledby="login-h">
-  <div class="flex items-center gap-4 mb-8">
-    <span class="flex h-20 w-20 shrink-0 items-center justify-center"><img alt="AICTE logo" class="logo-img h-full w-full object-contain"></span>
-    <div>
-      <p class="font-display font-bold text-ink text-lg leading-tight" data-hi="अखिल भारतीय तकनीकी शिक्षा परिषद">All India Council for Technical Education</p>
-      <p class="text-sm text-muted">Statutory body of the Government of India</p>
+<section id="login" class="max-w-7xl mx-auto px-4 md:px-8 py-10 md:py-14 grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)_320px] items-start" aria-labelledby="login-h">
+
+  <!-- Left: where complaints go -->
+  <aside class="order-2 lg:order-1 space-y-4" aria-label="Where complaints go">
+    <div class="bg-white border border-line border-t-4 border-t-saffron rounded-md p-5">
+      <h2 class="font-display text-xl font-bold text-ink" data-hi="आपकी शिकायत कहाँ जाती है">Where your complaint goes</h2>
+      <p class="text-sm text-muted mt-1 mb-4">Five bureaus and cells handle every case.</p>
+      <ul class="space-y-3 text-sm">
+        <li class="flex gap-3"><span class="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-sindoor"></span><span><b class="text-ink">Anti-Ragging Cell</b><span class="hi" lang="hi">रैगिंग-रोधी प्रकोष्ठ</span><span class="block text-muted">Ragging, harassment, threats, safety</span></span></li>
+        <li class="flex gap-3"><span class="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-ochre"></span><span><b class="text-ink">Finance Bureau</b><span class="hi" lang="hi">वित्त ब्यूरो</span><span class="block text-muted">Fees, refunds, scholarships</span></span></li>
+        <li class="flex gap-3"><span class="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-ochre"></span><span><b class="text-ink">Approval Bureau</b><span class="hi" lang="hi">अनुमोदन ब्यूरो</span><span class="block text-muted">Approval, affiliation, fake courses</span></span></li>
+        <li class="flex gap-3"><span class="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-muted"></span><span><b class="text-ink">Academic Bureau</b><span class="hi" lang="hi">शैक्षणिक ब्यूरो</span><span class="block text-muted">Faculty, syllabus, exams, placements</span></span></li>
+        <li class="flex gap-3"><span class="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-muted"></span><span><b class="text-ink">Grievance Redressal Cell</b><span class="hi" lang="hi">शिकायत निवारण प्रकोष्ठ</span><span class="block text-muted">Anything else</span></span></li>
+      </ul>
     </div>
-  </div>
+    <div class="bg-white border border-line rounded-md p-5">
+      <h3 class="font-display text-lg font-bold text-ink" data-hi="दर्ज करने से पहले तैयार रखें">Keep these ready</h3>
+      <ul class="mt-3 space-y-2 text-sm text-muted list-disc pl-5">
+        <li>Full name and institution, with its city</li>
+        <li>What happened, and roughly when</li>
+        <li>Any earlier reply from the college</li>
+      </ul>
+    </div>
+  </aside>
+
+  <div class="order-1 lg:order-2 min-w-0">
+
   <h2 id="login-h" class="font-display text-3xl font-bold text-ink" data-hi="कौन साइन इन कर रहा है?">Who is signing in?</h2>
   <p class="text-muted mt-1 mb-6">Students file complaints and follow their own cases. Officials monitor and update every case.</p>
 
@@ -103,6 +175,34 @@
     </div>
     <p class="text-xs text-muted">This is a demo sign-in that runs only in your browser. The final version will check credentials on the server.</p>
   </form>
+  </div>
+
+  <!-- Right: how it works -->
+  <aside class="order-3 bg-white border border-line border-t-4 border-t-leaf rounded-md p-5" aria-label="How it works">
+    <h2 class="font-display text-xl font-bold text-ink" data-hi="यह कैसे काम करता है">How it works</h2>
+    <ol class="mt-4 space-y-5">
+      <li class="flex gap-3">
+        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink text-white font-bold">1</span>
+        <div><p class="font-semibold text-ink">Sign in<span class="hi" lang="hi">साइन इन करें</span></p><p class="text-sm text-muted mt-0.5">Choose student or AICTE official and continue.</p></div>
+      </li>
+      <li class="flex gap-3">
+        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink text-white font-bold">2</span>
+        <div><p class="font-semibold text-ink">Describe the problem<span class="hi" lang="hi">समस्या बताएँ</span></p><p class="text-sm text-muted mt-0.5">Write in your own words. No forms to choose from.</p></div>
+      </li>
+      <li class="flex gap-3">
+        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink text-white font-bold">3</span>
+        <div><p class="font-semibold text-ink">It reaches the right cell<span class="hi" lang="hi">सही प्रकोष्ठ तक पहुँचती है</span></p><p class="text-sm text-muted mt-0.5">The complaint is routed and given an urgency automatically.</p></div>
+      </li>
+      <li class="flex gap-3">
+        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink text-white font-bold">4</span>
+        <div><p class="font-semibold text-ink">The college is told<span class="hi" lang="hi">संस्थान को सूचित किया जाता है</span></p><p class="text-sm text-muted mt-0.5">An official reviews it and asks the college to reply within 7 days.</p></div>
+      </li>
+      <li class="flex gap-3">
+        <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-leaf text-white font-bold">5</span>
+        <div><p class="font-semibold text-ink">Track until it is resolved<span class="hi" lang="hi">निपटारे तक प्रगति देखें</span></p><p class="text-sm text-muted mt-0.5">Follow New, In review, Sent to college and Resolved.</p></div>
+      </li>
+    </ol>
+  </aside>
 </section>
 
 <main id="app" class="hidden max-w-7xl mx-auto px-4 md:px-8 py-6 grid gap-6 lg:grid-cols-[360px_1fr] items-start">
@@ -577,7 +677,6 @@ ${c.category}, AICTE`;
     $("app").classList.remove("hidden");
     $("whoText").classList.remove("hidden");
     $("logout").classList.remove("hidden");
-    $("hdrLogo").classList.remove("hidden");
     $("whoText").innerHTML = isAdmin ? bi("AICTE official", "अधिकारी", true) : bi(`${esc(sess.name)} (student)`, "छात्र", true);
     $("fileSection").classList.toggle("hidden", isAdmin);
     $("summary").classList.toggle("hidden", !isAdmin);
@@ -595,7 +694,6 @@ ${c.category}, AICTE`;
     $("app").classList.add("hidden");
     $("whoText").classList.add("hidden");
     $("logout").classList.add("hidden");
-    $("hdrLogo").classList.add("hidden");
     $("login").classList.remove("hidden");
     $("loginForm").reset();
     pickRole("student");
@@ -645,6 +743,18 @@ ${c.category}, AICTE`;
     t.textContent = el.dataset.hi;
     el.appendChild(t);
   });
+  // Dark mode switch (remembered between visits)
+  const syncThemeBtn = () => {
+    const on = document.documentElement.classList.contains("dark");
+    $("themeToggle").textContent = on ? "Dark: On" : "Dark: Off";
+    $("themeToggle").setAttribute("aria-pressed", String(on));
+  };
+  $("themeToggle").addEventListener("click", () => {
+    const on = document.documentElement.classList.toggle("dark");
+    try { localStorage.setItem("aicteTheme", on ? "dark" : "light"); } catch (_) {}
+    syncThemeBtn();
+  });
+  syncThemeBtn();
   // Hindi on/off switch
   $("hiToggle").addEventListener("click", () => {
     const hide = document.body.classList.toggle("hide-hi");

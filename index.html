@@ -15,12 +15,12 @@
   } } };
 </script>
 <script>
-  // Apply the saved (or system) theme before the page paints, so there is no flash
+  // Light theme by default. Dark mode is used only if the visitor switched it on before. Applied before the page paints, so there is no flash
   (function () {
     var dark = false;
     try {
-      var t = localStorage.getItem("aicteTheme");
-      dark = t ? t === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+      var t = localStorage.getItem("aicteTheme2");
+      dark = t === "dark";
     } catch (_) {}
     if (dark) document.documentElement.classList.add("dark");
   })();
@@ -478,6 +478,8 @@
 
   // ---------- Helpers ----------
   const $ = (id) => document.getElementById(id);
+  const TOAST_OK = "rounded bg-green-50 border border-green-200 text-leaf px-3 py-2 text-sm";
+  const TOAST_ERR = "rounded bg-red-50 border border-red-200 text-sindoor px-3 py-2 text-sm";
   // Stops typed text from being run as HTML
   const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -595,11 +597,11 @@
     };
     let complaint;
     try { complaint = await api("/complaints", { method: "POST", body: draft }); }
-    catch (e) { $("toast").textContent = e.message; $("toast").classList.remove("hidden"); return; }
+    catch (e) { $("toast").className = TOAST_ERR; $("toast").textContent = e.message; return; }
     complaints.push(complaint);
     freshId = complaint.id;
     $("complaintForm").reset(); updateSlip(); renderTable();
-    $("toast").innerHTML = bi(`Case #${complaint.id} filed and sent to the ${esc(complaint.category)}.`, `मामला #${complaint.id} दर्ज हो गया और ${HI_CELL[complaint.category]} को भेजा गया।`);
+    $("toast").className = TOAST_OK; $("toast").innerHTML = bi(`Case #${complaint.id} filed and sent to the ${esc(complaint.category)}.`, `मामला #${complaint.id} दर्ज हो गया और ${HI_CELL[complaint.category]} को भेजा गया।`);
     $("toast").classList.remove("hidden");
   }
   $("fileBtn").addEventListener("click", fileComplaint);
@@ -687,7 +689,7 @@
     logAction(c, `Student edited the ${changed.join(", ")}`);
     save(c);
     closeEdit(); renderTable();
-    $("toast").innerHTML = bi(`Case #${c.id} updated. Officials can see the change.`, `मामला #${c.id} अपडेट हो गया। अधिकारी बदलाव देख सकते हैं।`);
+    $("toast").className = TOAST_OK; $("toast").innerHTML = bi(`Case #${c.id} updated. Officials can see the change.`, `मामला #${c.id} अपडेट हो गया। अधिकारी बदलाव देख सकते हैं।`);
     $("toast").classList.remove("hidden");
   }
 
@@ -866,7 +868,7 @@ ${c.category}, AICTE`;
   }
   const save = (c) => api("/complaints?id=" + c.id, { method: "PUT", body: c })
     .then(saved => { Object.assign(c, saved); })
-    .catch(e => { loadComplaints(); $("toast").textContent = e.message; $("toast").classList.remove("hidden"); });
+    .catch(e => { loadComplaints(); $("toast").className = TOAST_ERR; $("toast").textContent = e.message; });
   const removeOnServer = (id) => api("/complaints?id=" + id, { method: "DELETE" }).catch(() => loadComplaints());
 
   async function signIn(body) {
@@ -992,7 +994,7 @@ ${c.category}, AICTE`;
     root.classList.add("theme-anim");
     setTimeout(() => root.classList.remove("theme-anim"), 350);
     const on = root.classList.toggle("dark");
-    try { localStorage.setItem("aicteTheme", on ? "dark" : "light"); } catch (_) {}
+    try { localStorage.setItem("aicteTheme2", on ? "dark" : "light"); } catch (_) {}
     syncThemeBtn();
   });
   syncThemeBtn();

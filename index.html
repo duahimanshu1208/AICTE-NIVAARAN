@@ -43,7 +43,7 @@
   .dark body { background: var(--bg); color: var(--text); }
   .dark .bg-paper { background-color: var(--bg); }
   .dark .bg-white { background-color: var(--surface); }
-  .dark #slip, .dark #m-desc, .dark thead, .dark thead.bg-paper { background-color: var(--sunken); }
+  .dark #slip, .dark #m-desc, .dark #e-route, .dark thead, .dark thead.bg-paper { background-color: var(--sunken); }
   .dark .bg-line { background-color: var(--line); }
 
   /* Header */
@@ -74,10 +74,10 @@
   .dark .border-l-muted { border-left-color: #7C88AB; }
 
   /* Cards get a soft lift instead of a hard outline */
-  .dark section.bg-white, .dark aside.bg-white, .dark form.bg-white, .dark #modal .bg-white {
+  .dark section.bg-white, .dark aside.bg-white, .dark form.bg-white, .dark #modal .bg-white, .dark #editModal .bg-white {
     box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 10px 28px -14px rgba(0,0,0,.7);
   }
-  .dark #modal { background-color: rgba(4,7,20,.8); }
+  .dark #modal, .dark #editModal { background-color: rgba(4,7,20,.8); }
 
   /* Buttons and bars */
   .dark .bg-ink { background-color: var(--primary); }
@@ -346,6 +346,33 @@
   </div>
 </main>
 
+<!-- Student edit window (first 24 hours only) -->
+<div id="editModal" class="hidden fixed inset-0 z-50 bg-ink/60 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="e-heading">
+  <div class="max-w-xl mx-auto my-6 px-4">
+    <div class="bg-white rounded-md border-t-4 border-t-ink">
+      <div class="flex items-start justify-between gap-4 p-5 border-b border-line">
+        <div>
+          <h2 id="e-heading" class="font-display text-xl font-bold text-ink" data-hi="शिकायत का विवरण बदलें">Edit your complaint</h2>
+          <p id="e-time" class="text-sm text-muted"></p>
+        </div>
+        <button type="button" id="e-close" class="rounded border border-line px-3 py-1.5 text-sm font-semibold" data-hi="बंद करें" data-hi-in>Close</button>
+      </div>
+      <div class="p-5 space-y-4">
+        <label class="block text-sm font-semibold">Institution<input id="e-institution" class="mt-1 w-full rounded border border-line px-3 py-2 font-normal focus:border-ink"></label>
+        <label class="block text-sm font-semibold">Short title<input id="e-name" class="mt-1 w-full rounded border border-line px-3 py-2 font-normal focus:border-ink"></label>
+        <label class="block text-sm font-semibold">What happened?<textarea id="e-desc" rows="5" class="mt-1 w-full rounded border border-line px-3 py-2 font-normal focus:border-ink"></textarea></label>
+        <p id="e-route" class="rounded bg-paper px-3 py-2 text-sm"></p>
+        <p id="e-err" class="hidden rounded bg-red-50 border border-red-200 text-sindoor px-3 py-2 text-sm" role="alert"></p>
+        <div class="flex flex-wrap items-center gap-3">
+          <button type="button" id="e-save" class="bg-ink text-white font-semibold rounded px-4 py-2 hover:bg-[#141c44]" data-hi="बदलाव सहेजें" data-hi-in>Save changes</button>
+          <button type="button" id="e-cancel" class="rounded border border-line px-4 py-2 font-semibold" data-hi="रद्द करें" data-hi-in>Cancel</button>
+        </div>
+        <p class="text-xs text-muted">You can change your complaint only during the first 24 hours after filing. After that it is locked, so officials work from a stable record.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Case management window (officials) -->
 <div id="modal" class="hidden fixed inset-0 z-50 bg-ink/60 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="m-title">
   <div class="max-w-4xl mx-auto my-6 px-4">
@@ -429,13 +456,14 @@
   const bi = (en, hi, inline) => `${en}<span class="hi${inline ? " in" : ""}" lang="hi">${hi}</span>`;
 
   // ---------- Simulated database ----------
+  const HOUR = 3600000;
   let complaints = [
     { id: 1, institution: "Sunrise Institute of Technology, Nagpur", title: "Late fee penalty",          category: "Finance Bureau",     urgency: "Medium", status: "In review", date: "2026-10-20" },
-    { id: 2, email: "demo.student@example.com", institution: "Lakeview Polytechnic, Bhopal",            title: "Harassment in hostel",      category: "Anti-Ragging Cell",  urgency: "High",   status: "New",       date: "2026-10-23" },
+    { id: 2, email: "demo.student@example.com", createdAt: Date.now() - 3 * HOUR, institution: "Lakeview Polytechnic, Bhopal",            title: "Harassment in hostel",      category: "Anti-Ragging Cell",  urgency: "High",   status: "New",       date: "2026-10-23" },
     { id: 3, institution: "Greenfield College, Jaipur",              title: "Course without approval",   category: "Approval Bureau",    urgency: "Medium", status: "Resolved",  date: "2026-10-15" },
-    { id: 4, email: "demo.student@example.com", institution: "Northstar Management Institute, Delhi",  title: "Syllabus not covered",      category: "Academic Bureau",    urgency: "Low",    status: "New",       date: "2026-10-22" },
+    { id: 4, email: "demo.student@example.com", createdAt: Date.now() - 23.5 * HOUR, institution: "Northstar Management Institute, Delhi",  title: "Syllabus not covered",      category: "Academic Bureau",    urgency: "Low",    status: "New",       date: "2026-10-22" },
     { id: 5, institution: "Riverbend Engineering College, Pune",    title: "Refund pending for 3 months", category: "Finance Bureau",   urgency: "Medium", status: "In review", date: "2026-10-09" },
-    { id: 6, email: "demo.student@example.com", institution: "Hillcrest Institute, Dehradun",          title: "Threats from seniors",      category: "Anti-Ragging Cell",  urgency: "High",   status: "In review", date: "2026-10-21" }
+    { id: 6, email: "demo.student@example.com", createdAt: Date.now() - 30 * HOUR, institution: "Hillcrest Institute, Dehradun",          title: "Threats from seniors",      category: "Anti-Ragging Cell",  urgency: "High",   status: "In review", date: "2026-10-21" }
   ];
   let nextId = 7, freshId = null, session = null, showArchived = false, msgEdited = false;
   const DEMO_TEXT = {
@@ -446,7 +474,7 @@
     5: "My refund request has been pending for three months. The accounts office gives no answer.",
     6: "Seniors threatened students who refused to follow their orders. We feel unsafe."
   };
-  complaints.forEach(c => { c.description = DEMO_TEXT[c.id]; c.history = [{ when: c.date, text: "Complaint filed" }]; });
+  complaints.forEach(c => { c.createdAt = c.createdAt || Date.parse(c.date); c.description = DEMO_TEXT[c.id]; c.history = [{ when: c.date, text: "Complaint filed" }]; });
 
   // ---------- Helpers ----------
   const $ = (id) => document.getElementById(id);
@@ -516,7 +544,7 @@
           <div class="font-semibold">#${c.id}</div>
           <div class="text-xs font-semibold ${u.text}">${esc(c.urgency)} urgency<span class="hi" lang="hi">${HI_URG[c.urgency]}</span></div>
         </td>
-        <td class="px-4 py-3 min-w-[220px]"><div class="font-semibold">${esc(c.title)}</div><div class="text-muted text-sm">${esc(c.institution)}</div></td>
+        <td class="px-4 py-3 min-w-[220px]"><div class="font-semibold">${esc(c.title)}</div><div class="text-muted text-sm">${esc(c.institution)}</div>${c.editedAt ? `<div class="text-xs font-semibold text-ochre">Edited by student</div>` : ""}</td>
         <td class="px-4 py-3 whitespace-nowrap">${esc(c.category)}<span class="hi" lang="hi">${HI_CELL[c.category]}</span></td>
         <td class="px-4 py-3 whitespace-nowrap text-muted">${esc(c.date)}</td>
         <td class="px-4 py-3">
@@ -528,7 +556,7 @@
                 ${STATUSES.map(s => `<option value="${s}" ${s === c.status ? "selected" : ""}>${s} (${HI_STATUS[s]})</option>`).join("")}
               </select>
               <button type="button" data-manage="${c.id}" class="mt-1.5 block text-sm font-semibold text-ink underline">Manage case${c.archived ? " (archived)" : ""}</button>`
-            : `<span class="text-sm font-semibold">${esc(c.status)}<span class="hi" lang="hi">${HI_STATUS[c.status]}</span></span>${c.remark ? `<div class="text-sm text-muted mt-1 max-w-[220px]">Update: ${esc(c.remark)}</div>` : ""}`}
+            : `<span class="text-sm font-semibold">${esc(c.status)}<span class="hi" lang="hi">${HI_STATUS[c.status]}</span></span>${c.remark ? `<div class="text-sm text-muted mt-1 max-w-[220px]">Update: ${esc(c.remark)}</div>` : ""}${editBlock(c)}`}
         </td>
       </tr>`;
     }).join("");
@@ -563,7 +591,7 @@
       id: nextId++, email: session.email, student: session.name, institution: $("institution").value.trim(), title,
       description: desc, history: [{ when: new Date().toISOString().slice(0, 10), text: "Complaint filed" }],
       category: r.category, urgency: r.urgency, status: "New",
-      date: new Date().toISOString().slice(0, 10)
+      createdAt: Date.now(), date: new Date().toISOString().slice(0, 10)
     };
     saveComplaint(complaint);
     freshId = complaint.id;
@@ -586,6 +614,104 @@
   ["search", "fCell", "fStatus"].forEach(id => $(id).addEventListener("input", renderTable));
   $("fCell").innerHTML += CELLS.map(c => `<option value="${c}">${c} (${HI_CELL[c]})</option>`).join("");
   $("fStatus").innerHTML += STATUSES.map(s => `<option value="${s}">${s} (${HI_STATUS[s]})</option>`).join("");
+
+  // ---------- Student edit window (first 24 hours only) ----------
+  // Real enforcement belongs on the Flask server too: compare the stored filing time with the current time there.
+  const EDIT_MS = 24 * HOUR;
+  let editId = null;
+  const editLeft = (c) => EDIT_MS - (Date.now() - c.createdAt);
+  function fmtLeft(ms) {
+    const m = Math.max(0, Math.ceil(ms / 60000));
+    return m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m}m`;
+  }
+  function editBlock(c) {
+    const left = editLeft(c);
+    return left > 0
+      ? `<button type="button" data-edit="${c.id}" class="mt-2 block text-sm font-semibold text-ink underline">Edit details<span class="hi in" lang="hi">विवरण बदलें</span></button>
+         <div class="text-xs text-muted"><span data-left="${c.id}">Editing closes in ${fmtLeft(left)}</span><span class="hi" lang="hi">शिकायत केवल पहले 24 घंटों में बदली जा सकती है।</span></div>`
+      : `<div class="mt-2 text-xs text-muted">Editing closed after 24 hours<span class="hi" lang="hi">24 घंटे बाद संपादन बंद है।</span></div>`;
+  }
+
+  function updateEditInfo() {
+    const c = complaints.find(x => x.id === editId); if (!c) return;
+    $("e-time").innerHTML = bi(`Case #${c.id}. Editing closes in ${fmtLeft(editLeft(c))}.`, `मामला #${c.id}। संपादन की समय-सीमा जारी है।`);
+    const r = smartRoute($("e-name").value + " " + $("e-desc").value);
+    $("e-route").innerHTML = c.manualRoute
+      ? `An official has assigned this case to the <b>${esc(c.category)}</b>, so your changes will not move it.`
+      : `After your changes it will go to the <b>${esc(r.category)}</b> (${r.urgency} urgency).`;
+  }
+
+  function openEdit(id) {
+    const c = complaints.find(x => x.id === id && x.email === session.email);
+    if (!c) return;
+    if (editLeft(c) <= 0) { renderTable(); return; }
+    editId = id;
+    $("e-institution").value = c.institution; $("e-name").value = c.title; $("e-desc").value = c.description || "";
+    $("e-err").classList.add("hidden");
+    updateEditInfo();
+    $("editModal").classList.remove("hidden");
+    document.body.classList.add("overflow-hidden");
+    $("e-name").focus();
+  }
+  function closeEdit() {
+    editId = null;
+    $("editModal").classList.add("hidden");
+    document.body.classList.remove("overflow-hidden");
+  }
+
+  function saveEdit() {
+    const c = complaints.find(x => x.id === editId); if (!c) return;
+    if (editLeft(c) <= 0) { closeEdit(); renderTable(); return; }   // the 24 hours ended while the window was open
+    const inst = $("e-institution").value.trim(), title = $("e-name").value.trim(), desc = $("e-desc").value.trim();
+    if (!inst || !title || !desc) {
+      $("e-err").innerHTML = bi("Please fill in the institution, title and description.", "कृपया संस्थान, शीर्षक और विवरण भरें।");
+      $("e-err").classList.remove("hidden");
+      return;
+    }
+    const changed = [];
+    if (inst !== c.institution) changed.push("institution");
+    if (title !== c.title) changed.push("title");
+    if (desc !== (c.description || "")) changed.push("description");
+    if (!changed.length) return closeEdit();
+
+    Object.assign(c, { institution: inst, title, description: desc, editedAt: Date.now() });
+    if (!c.manualRoute) {                       // re-route only if no official has chosen the cell or urgency
+      const r = smartRoute(title + " " + desc);
+      if (r.category !== c.category) logAction(c, `Re-routed to ${r.category} after the student's edit`);
+      c.category = r.category; c.urgency = r.urgency;
+    }
+    logAction(c, `Student edited the ${changed.join(", ")}`);
+    closeEdit(); renderTable();
+    $("toast").innerHTML = bi(`Case #${c.id} updated. Officials can see the change.`, `मामला #${c.id} अपडेट हो गया। अधिकारी बदलाव देख सकते हैं।`);
+    $("toast").classList.remove("hidden");
+  }
+
+  $("e-save").addEventListener("click", saveEdit);
+  $("e-cancel").addEventListener("click", closeEdit);
+  $("e-close").addEventListener("click", closeEdit);
+  $("editModal").addEventListener("click", (e) => { if (e.target === $("editModal")) closeEdit(); });
+  ["e-name", "e-desc"].forEach(id => $(id).addEventListener("input", updateEditInfo));
+  $("tableBody").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-edit]");
+    if (b) openEdit(Number(b.dataset.edit));
+  });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && editId !== null) closeEdit(); });
+
+  // Keep the countdowns fresh and lock a case the moment its 24 hours are over
+  setInterval(() => {
+    if (!session || session.role !== "student") return;
+    let expired = false;
+    document.querySelectorAll("[data-left]").forEach(el => {
+      const c = complaints.find(x => x.id === Number(el.dataset.left)); if (!c) return;
+      const left = editLeft(c);
+      if (left <= 0) expired = true; else el.textContent = `Editing closes in ${fmtLeft(left)}`;
+    });
+    if (editId !== null) {
+      const c = complaints.find(x => x.id === editId);
+      if (c && editLeft(c) <= 0) { closeEdit(); expired = true; } else updateEditInfo();
+    }
+    if (expired) renderTable();
+  }, 30000);
 
   // ---------- Case management (officials) ----------
   let openId = null, armed = null;
@@ -661,6 +787,7 @@ ${c.category}, AICTE`;
     if (st !== c.status) logAction(c, `Status changed from ${c.status} to ${st}`);
     if (ce !== c.category) logAction(c, `Reassigned from ${c.category} to ${ce}`);
     if (ug !== c.urgency) logAction(c, `Urgency changed from ${c.urgency} to ${ug}`);
+    if (ce !== c.category || ug !== c.urgency) c.manualRoute = true;
     if (rm !== (c.remark || "")) logAction(c, rm ? `Update for the student: ${rm}` : "Update for the student cleared");
     Object.assign(c, { status: st, urgency: ug, category: ce, remark: rm, collegeEmail: $("m-mail").value.trim() });
     if (!msgEdited) $("m-msg").value = draftMessage(c);

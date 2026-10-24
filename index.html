@@ -241,7 +241,8 @@
       <button type="button" id="loginBtn" class="bg-ink text-white font-semibold rounded px-5 py-2.5 hover:bg-[#141c44]">Continue as student</button>
       <button type="button" id="demoFill" class="text-sm font-semibold text-ink underline" data-hi="डेमो विवरण भरें" data-hi-in>Fill demo details</button>
     </div>
-  </form> 
+    <p class="text-xs text-muted">This is a demo sign-in that runs only in your browser. The final version will check credentials on the server.</p>
+  </form>
   </div>
 
   <!-- Right: how it works -->
@@ -582,17 +583,20 @@
   $("title").addEventListener("input", updateSlip);
   $("desc").addEventListener("input", updateSlip);
 
-  function fileComplaint() {
+  async function fileComplaint() {
     if (!$("complaintForm").reportValidity()) return;
     const title = $("title").value.trim(), desc = $("desc").value.trim();
     const r = smartRoute(title + " " + desc);
-    const complaint = {
-      id: nextId++, email: session.email, student: session.name, institution: $("institution").value.trim(), title,
+    const draft = {
+      email: session.email, student: session.name, institution: $("institution").value.trim(), title,
       description: desc, history: [{ when: new Date().toISOString().slice(0, 10), text: "Complaint filed" }],
       category: r.category, urgency: r.urgency, status: "New",
       createdAt: Date.now(), date: new Date().toISOString().slice(0, 10)
     };
-    saveComplaint(complaint);
+    let complaint;
+    try { complaint = await api("/complaints", { method: "POST", body: draft }); }
+    catch (e) { $("toast").textContent = e.message; $("toast").classList.remove("hidden"); return; }
+    complaints.push(complaint);
     freshId = complaint.id;
     $("complaintForm").reset(); updateSlip(); renderTable();
     $("toast").innerHTML = bi(`Case #${complaint.id} filed and sent to the ${esc(complaint.category)}.`, `मामला #${complaint.id} दर्ज हो गया और ${HI_CELL[complaint.category]} को भेजा गया।`);
@@ -607,6 +611,7 @@
     const c = complaints.find(c => c.id === Number(e.target.dataset.id));
     logAction(c, `Status changed from ${c.status} to ${e.target.value}`);
     c.status = e.target.value;
+    save(c);
     renderTable();
   });
 
@@ -680,6 +685,7 @@
       c.category = r.category; c.urgency = r.urgency;
     }
     logAction(c, `Student edited the ${changed.join(", ")}`);
+    save(c);
     closeEdit(); renderTable();
     $("toast").innerHTML = bi(`Case #${c.id} updated. Officials can see the change.`, `मामला #${c.id} अपडेट हो गया। अधिकारी बदलाव देख सकते हैं।`);
     $("toast").classList.remove("hidden");
@@ -789,6 +795,7 @@ ${c.category}, AICTE`;
     if (ce !== c.category || ug !== c.urgency) c.manualRoute = true;
     if (rm !== (c.remark || "")) logAction(c, rm ? `Update for the student: ${rm}` : "Update for the student cleared");
     Object.assign(c, { status: st, urgency: ug, category: ce, remark: rm, collegeEmail: $("m-mail").value.trim() });
+    save(c);
     if (!msgEdited) $("m-msg").value = draftMessage(c);
     syncMailto(); renderModalExtras(c); renderTable();
     $("m-saved").classList.remove("hidden");
@@ -815,10 +822,10 @@ ${c.category}, AICTE`;
     if (e.target === $("modal") || e.target.closest("#m-close")) return closeCase();
     const act = e.target.dataset.act, c = find(openId);
     if (!act || !c) return;
-    if (act === "restore") { c.archived = false; logAction(c, "Restored to the register"); armed = null; renderModalExtras(c); renderTable(); return; }
+    if (act === "restore") { c.archived = false; logAction(c, "Restored to the register"); save(c); armed = null; renderModalExtras(c); renderTable(); return; }
     if (armed !== act) { armed = act; renderModalExtras(c); return; }   // first click only asks for confirmation
-    if (act === "archive") { c.archived = true; c.archiveReason = $("m-reason").value; logAction(c, `Archived: ${c.archiveReason}`); }
-    else complaints.splice(complaints.indexOf(c), 1);
+    if (act === "archive") { c.archived = true; c.archiveReason = $("m-reason").value; logAction(c, `Archived: ${c.archiveReason}`); save(c); }
+    else { complaints.splice(complaints.indexOf(c), 1); removeOnServer(c.id); }
     closeCase(); renderTable();
   });
   $("m-save").addEventListener("click", saveCase);
@@ -834,7 +841,44 @@ ${c.category}, AICTE`;
   });
   $("showArch").addEventListener("change", (e) => { showArchived = e.target.checked; renderTable(); });
 
-  // ---------- Sign-in (demo only: runs in the browser) ----------
+  // ---------- Talking to the server (the functions in the api/ folder) ----------
+  async function api(path, { method = "GET", body, auth = true } = {}) {
+    const headers = { "Content-Type": "application/json" };
+    if (auth && session && session.token) headers.Authorization = "Bearer " + session.token;
+    let res;
+    try { res = await fetch("/api" + path, { method, headers, body: body ? JSON.stringify(body) : undefined }); }
+    catch (_) { throw new Error("Cannot reach the server. Check your internet and try again."); }
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 401 && auth && session) { logout(); throw new Error("Please sign in again."); }
+    if (!res.ok) throw new Error(data.error || "Something went wrong.");
+    return data;
+  }
+
+  let lastJson = "";
+  async function loadComplaints() {           // redraw only when something changed
+    if (!session) return;
+    try {
+      const data = await api("/complaints");
+      const json = JSON.stringify(data);
+      if (json === lastJson) return;
+      lastJson = json; complaints = data; renderTable();
+    } catch (_) {}
+  }
+  const save = (c) => api("/complaints?id=" + c.id, { method: "PUT", body: c })
+    .then(saved => { Object.assign(c, saved); })
+    .catch(e => { loadComplaints(); $("toast").textContent = e.message; $("toast").classList.remove("hidden"); });
+  const removeOnServer = (id) => api("/complaints?id=" + id, { method: "DELETE" }).catch(() => loadComplaints());
+
+  async function signIn(body) {
+    try {
+      const d = await api("/login", { method: "POST", body, auth: false });
+      startSession({ role: d.role === "official" ? "admin" : "student", name: d.name, email: d.email || "", token: d.token });
+    } catch (e) { showLoginError(e.message, "साइन इन नहीं हो सका। जानकारी जाँचकर फिर कोशिश करें।"); }
+  }
+  // Check for new complaints every 5 seconds (not while a window is open)
+  setInterval(() => { if (session && openId === null && editId === null) loadComplaints(); }, 5000);
+
+  // ---------- Sign-in ----------
   // A real version sends these details to Flask and gets a login session back.
   const ADMIN = { id: "official", password: "official.login" };
   let pickedRole = "student";
@@ -879,7 +923,9 @@ ${c.category}, AICTE`;
     $("toast").classList.add("hidden");
     $("archWrap").classList.toggle("hidden", !isAdmin);
     showArchived = false; $("showArch").checked = false;
+    complaints = []; lastJson = "";
     renderTable();
+    loadComplaints();
   }
 
   function logout() {
@@ -897,11 +943,9 @@ ${c.category}, AICTE`;
     if (pickedRole === "student") {
       const name = $("sName").value.trim(), email = $("sEmail").value.trim().toLowerCase();
       if (!name || !/^\S+@\S+\.\S+$/.test(email)) return showLoginError("Enter your full name and a valid email address.", "अपना पूरा नाम और सही ईमेल पता दर्ज करें।");
-      startSession({ role: "student", name, email });
+      signIn({ role: "student", name, email });
     } else {
-      if ($("aId").value.trim().toLowerCase() !== ADMIN.id || $("aPass").value !== ADMIN.password)
-        return showLoginError("Official ID or password is incorrect. Check both and try again.", "अधिकारी आईडी या पासवर्ड गलत है। दोनों जाँचकर फिर कोशिश करें।");
-      startSession({ role: "admin", name: "AICTE official", email: "" });
+      signIn({ role: "official", id: $("aId").value.trim(), password: $("aPass").value });
     }
   }
   $("loginBtn").addEventListener("click", doLogin);
@@ -962,20 +1006,6 @@ ${c.category}, AICTE`;
 
   pickRole("student");
   try { const saved = JSON.parse(sessionStorage.getItem("aicteSession")); if (saved) startSession(saved); } catch (_) {}
-</script>
-  <script>
-  document.getElementById('myForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const response = await fetch('/api/submit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title: document.getElementById('title').value,
-        description: document.getElementById('desc').value
-      })
-    });
-    if (response.ok) alert("Complaint Sent!");
-  });
 </script>
 </body>
 </html>

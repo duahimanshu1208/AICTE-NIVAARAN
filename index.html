@@ -963,5 +963,19 @@ ${c.category}, AICTE`;
   pickRole("student");
   try { const saved = JSON.parse(sessionStorage.getItem("aicteSession")); if (saved) startSession(saved); } catch (_) {}
 </script>
+  <script>
+  document.getElementById('myForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const response = await fetch('/api/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: document.getElementById('title').value,
+        description: document.getElementById('desc').value
+      })
+    });
+    if (response.ok) alert("Complaint Sent!");
+  });
+</script>
 </body>
 </html>

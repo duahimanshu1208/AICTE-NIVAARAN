@@ -27,37 +27,105 @@
 </script>
 <style>
   /* ---------- Dark mode ---------- */
-  html.dark { color-scheme: dark; }
-  .dark body { background: #0E1226; color: #E3E7F3; }
-  .dark header { background: #0A0E20; }
-  .dark .bg-white { background-color: #182039; }
-  .dark .bg-paper { background-color: #0E1226; }
-  .dark .bg-white .bg-paper, .dark .bg-paper.rounded, .dark #slip, .dark #m-desc, .dark thead { background-color: #111831; }
-  .dark .bg-line { background-color: #2B3558; }
-  .dark .bg-ink { background-color: #4357C4; }
-  .dark .hover\:bg-\[\#141c44\]:hover { background-color: #5468D6; }
-  .dark header .bg-white { background-color: #fff; }
-  .dark .text-ink { color: #B9C4FF; }
-  .dark .text-muted { color: #9BA6C6; }
-  .dark .text-slate-800 { color: #E3E7F3; }
-  .dark .text-sindoor { color: #FF8A78; }
-  .dark .text-ochre { color: #F0B454; }
-  .dark .text-leaf { color: #5FD39A; }
-  .dark .border-line, .dark .divide-line > * + * { border-color: #2B3558; }
-  .dark .border-ink, .dark .border-t-ink { border-color: #8FA0F0; }
-  .dark .border-t-ink { border-top-color: #6F82E8; }
-  .dark .focus\:border-ink:focus { border-color: #8FA0F0; }
+  html.dark {
+    color-scheme: dark;
+    --bg: #0B0F1F;        /* page */
+    --surface: #131A31;   /* cards */
+    --raised: #1A2342;    /* selected / hovered */
+    --sunken: #0E1429;    /* inputs, table head */
+    --line: #27315A;
+    --text: #E6E9F5;
+    --muted: #98A3C4;
+    --accent: #9DAEFF;    /* headings, links */
+    --primary: #4B5FD1;   /* buttons, bars */
+    --primary-hi: #5E71E3;
+  }
+  .dark body { background: var(--bg); color: var(--text); }
+  .dark .bg-paper { background-color: var(--bg); }
+  .dark .bg-white { background-color: var(--surface); }
+  .dark #slip, .dark #m-desc, .dark thead, .dark thead.bg-paper { background-color: var(--sunken); }
+  .dark .bg-line { background-color: var(--line); }
+
+  /* Header */
+  .dark header { background: linear-gradient(180deg, #111A3F 0%, #0A0F26 100%); border-bottom: 1px solid var(--line); }
+  .dark header .bg-white { background-color: #fff; box-shadow: 0 0 0 3px rgba(157,174,255,.25); }
+  .dark .flag { opacity: .85; filter: saturate(.9); }
+
+  /* Text */
+  .dark .text-slate-800 { color: var(--text); }
+  .dark .text-ink { color: var(--accent); }
+  .dark .text-muted { color: var(--muted); }
+  .dark .text-sindoor { color: #FF8F7D; }
+  .dark .text-ochre { color: #F2B65A; }
+  .dark .text-leaf { color: #62D69E; }
+  .dark a { color: var(--accent); }
+
+  /* Borders */
+  .dark .border-line, .dark .divide-line > * + * { border-color: var(--line); }
+  .dark .border-ink { border-color: var(--accent); }
+  .dark .border-t-ink { border-top-color: var(--primary-hi); }
+  .dark .border-t-saffron { border-top-color: #F0AE2A; }
+  .dark .border-t-leaf { border-top-color: #3DB483; }
   .dark .border-muted { border-color: #7C88AB; }
-  .dark .border-muted\/50 { border-color: rgba(155,166,198,.5); }
-  .dark input, .dark select, .dark textarea { background-color: #0E1530; color: #E3E7F3; }
-  .dark input::placeholder, .dark textarea::placeholder { color: #7C88AB; }
-  .dark .bg-red-50 { background-color: #3A1A1F; }
-  .dark .border-red-200 { border-color: #6B2B33; }
+  .dark .border-muted\/50 { border-color: rgba(152,163,196,.45); }
+  .dark .border-sindoor { border-color: #E0705F; }
+  .dark .border-l-sindoor { border-left-color: #F0715F; }
+  .dark .border-l-ochre { border-left-color: #E8A93E; }
+  .dark .border-l-muted { border-left-color: #7C88AB; }
+
+  /* Cards get a soft lift instead of a hard outline */
+  .dark section.bg-white, .dark aside.bg-white, .dark form.bg-white, .dark #modal .bg-white {
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 10px 28px -14px rgba(0,0,0,.7);
+  }
+  .dark #modal { background-color: rgba(4,7,20,.8); }
+
+  /* Buttons and bars */
+  .dark .bg-ink { background-color: var(--primary); }
+  .dark .hover\:bg-\[\#141c44\]:hover { background-color: var(--primary-hi); }
+  .dark .bg-saffron { background-color: #F0AE2A; }
+  .dark .bg-leaf { background-color: #2FA877; }
+  .dark .bg-sindoor { background-color: #E0705F; }
+  .dark .bg-ochre { background-color: #D9983A; }
+  .dark .bg-muted { background-color: #7C88AB; }
+  .dark .bg-\[\#2F7FA8\] { background-color: #3C93BF; }
+
+  /* Form controls */
+  .dark input, .dark select, .dark textarea, .dark select.bg-white {
+    background-color: var(--sunken); color: var(--text); border-color: var(--line);
+  }
+  .dark input::placeholder, .dark textarea::placeholder { color: #6F7BA0; }
+  .dark input:focus, .dark select:focus, .dark textarea:focus,
+  .dark .focus\:border-ink:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(157,174,255,.18); outline: none; }
+  .dark option { background: var(--surface); color: var(--text); }
+  .dark input:-webkit-autofill { -webkit-box-shadow: 0 0 0 100px var(--sunken) inset; -webkit-text-fill-color: var(--text); caret-color: var(--text); }
+  .dark input[type="checkbox"] { accent-color: var(--primary-hi); }
+
+  /* Role cards */
+  .dark .role { transition: background-color .15s, border-color .15s; }
+  .dark .role:hover { border-color: #4A5788; }
+  .dark .role[aria-checked="true"] { background-color: var(--raised); border-color: var(--accent); }
+  .dark [class*="shadow-[inset"] { box-shadow: inset 0 0 0 2px var(--raised); }
+
+  /* Table and states */
+  .dark tbody tr:hover { background-color: rgba(157,174,255,.05); }
+  .dark .bg-red-50 { background-color: #3A1B22; }
+  .dark .border-red-200 { border-color: #6E2E38; }
   .dark .bg-green-50 { background-color: #12301F; }
-  .dark .border-green-200 { border-color: #1F5A38; }
+  .dark .border-green-200 { border-color: #215C3A; }
   .dark tr.fresh { animation-name: freshDark; }
   @keyframes freshDark { from { background: #4A3A10; } to { background: transparent; } }
-  .dark .role[aria-checked="true"] { box-shadow: 0 0 0 1px #8FA0F0; }
+
+  /* Scrollbars and selection */
+  .dark * { scrollbar-color: #36427A var(--sunken); }
+  .dark ::selection { background: var(--primary); color: #fff; }
+
+  /* Smooth change when the switch is clicked */
+  html.theme-anim, html.theme-anim *, html.theme-anim *::before, html.theme-anim *::after {
+    transition: background-color .25s ease, color .25s ease, border-color .25s ease, box-shadow .25s ease !important;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html.theme-anim, html.theme-anim * { transition: none !important; }
+  }
 </style>
 <style>
   :focus-visible { outline: 2px solid #E59A00; outline-offset: 2px; }
@@ -750,7 +818,10 @@ ${c.category}, AICTE`;
     $("themeToggle").setAttribute("aria-pressed", String(on));
   };
   $("themeToggle").addEventListener("click", () => {
-    const on = document.documentElement.classList.toggle("dark");
+    const root = document.documentElement;
+    root.classList.add("theme-anim");
+    setTimeout(() => root.classList.remove("theme-anim"), 350);
+    const on = root.classList.toggle("dark");
     try { localStorage.setItem("aicteTheme", on ? "dark" : "light"); } catch (_) {}
     syncThemeBtn();
   });

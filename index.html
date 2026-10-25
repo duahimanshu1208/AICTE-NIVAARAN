@@ -136,9 +136,19 @@
   .hi { display: block; font-family: 'Mukta', sans-serif; font-weight: 500; font-size: .8125rem; line-height: 1.35; opacity: .78; }
   .hi.in { display: inline; margin-left: .5rem; }
   .hide-hi .hi { display: none; }
+  /* Softer, slightly bluer page background (light theme only) */
+  html:not(.dark) body { background: linear-gradient(180deg, #F6F9FE 0%, #E6EDF8 55%, #DCE5F4 100%); }
+  /* Red anti-ragging helpline bar on the login page */
+  #helpline { background-color: #C23B2B; }
+  #helpline a, #siteFooter a { color: #fff; text-underline-offset: 3px; }
+  #helpline .hi { opacity: .92; }
+  #helpline .num:hover, #siteFooter a:hover { text-decoration: underline; }
+  .dark #helpline { background-color: #A32F23; }
+  /* Government-style blue footer */
+  .dark #siteFooter { background: linear-gradient(180deg, #0A0F26 0%, #111A3F 100%); border-top: 1px solid var(--line); }
 </style>
 </head>
-<body class="bg-paper font-sans text-slate-800 text-[15px]">
+<body class="bg-paper font-sans text-slate-800 text-[15px] min-h-screen flex flex-col">
 
 <header class="bg-ink text-white">
   <div class="flag"></div>
@@ -166,8 +176,20 @@
   </div>
 </header>
 
+<!-- Anti-ragging helpline (login page only) -->
+<div id="helpline" class="text-white" role="region" aria-label="National Anti-Ragging Helpline">
+  <div class="max-w-7xl mx-auto px-4 md:px-8 py-3 flex flex-wrap items-center justify-between gap-x-8 gap-y-2">
+    <p class="font-semibold">Ragging is a criminal offence. Need help? Call the National Anti-Ragging Helpline.<span class="hi" lang="hi">रैगिंग एक आपराधिक अपराध है। सहायता के लिए राष्ट्रीय रैगिंग-रोधी हेल्पलाइन पर कॉल करें।</span></p>
+    <div class="flex flex-wrap items-center gap-x-5 gap-y-1">
+      <a class="num font-display text-2xl font-bold" href="tel:18001805522" aria-label="Call 1800 180 5522">1800-180-5522</a>
+      <p class="text-sm">Toll free, 24x7<span class="hi" lang="hi">टोल फ्री, 24x7</span></p>
+      <a class="text-sm underline" href="mailto:helpline@antiragging.in">helpline@antiragging.in</a>
+    </div>
+  </div>
+</div>
+
 <!-- Login -->
-<section id="login" class="max-w-7xl mx-auto px-4 md:px-8 py-10 md:py-14 grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)_320px] items-start" aria-labelledby="login-h">
+<section id="login" class="w-full flex-1 max-w-7xl mx-auto px-4 md:px-8 py-10 md:py-14 grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)_320px] items-start" aria-labelledby="login-h">
 
   <!-- Left: where complaints go -->
   <aside class="order-2 lg:order-1 space-y-4" aria-label="Where complaints go">
@@ -273,7 +295,7 @@
   </aside>
 </section>
 
-<main id="app" class="hidden max-w-7xl mx-auto px-4 md:px-8 py-6 grid gap-6 lg:grid-cols-[360px_1fr] items-start">
+<main id="app" class="hidden w-full flex-1 max-w-7xl mx-auto px-4 md:px-8 py-6 grid gap-6 lg:grid-cols-[360px_1fr] items-start">
 
   <!-- Filing form -->
   <section id="fileSection" class="bg-white border border-line border-t-4 border-t-ink rounded-md p-5 lg:sticky lg:top-4" aria-labelledby="file-h">
@@ -345,6 +367,36 @@
     </section>
   </div>
 </main>
+
+<footer id="siteFooter" class="bg-ink text-white mt-10">
+  <div class="flag"></div>
+  <div class="max-w-7xl mx-auto px-4 md:px-8 py-8 grid gap-8 md:grid-cols-3">
+    <div>
+      <p class="font-display text-lg font-bold leading-snug">All India Council for Technical Education<span class="hi" lang="hi">अखिल भारतीय तकनीकी शिक्षा परिषद</span></p>
+      <p class="text-sm text-slate-300 mt-2">A statutory body of the Government of India, Ministry of Education</p>
+      <p class="text-sm text-slate-300 mt-3">Nelson Mandela Marg, Vasant Kunj, New Delhi - 110070<br>Phone: 011-29581000</p>
+    </div>
+    <div>
+      <h2 class="font-display text-lg font-bold">Useful links<span class="hi" lang="hi">उपयोगी लिंक</span></h2>
+      <ul class="mt-2 space-y-1.5 text-sm">
+        <li><a href="https://www.aicte-india.org" target="_blank" rel="noopener">AICTE official website</a></li>
+        <li><a href="https://www.antiragging.in" target="_blank" rel="noopener">National Anti-Ragging portal</a></li>
+        <li><a href="https://education.gov.in" target="_blank" rel="noopener">Ministry of Education</a></li>
+      </ul>
+    </div>
+    <div>
+      <h2 class="font-display text-lg font-bold">Need help?<span class="hi" lang="hi">सहायता चाहिए?</span></h2>
+      <p class="text-sm text-slate-300 mt-2">National Anti-Ragging Helpline, toll free, 24x7</p>
+      <p class="mt-1"><a class="font-display text-xl font-bold" href="tel:18001805522">1800-180-5522</a></p>
+      <p class="text-sm mt-1"><a href="mailto:helpline@antiragging.in">helpline@antiragging.in</a></p>
+    </div>
+  </div>
+  <div class="border-t border-white/20">
+    <div class="max-w-7xl mx-auto px-4 md:px-8 py-4 text-xs text-slate-300">
+      Prototype built for Smart India Hackathon 2026, problem statement SIH26264. This is not the official AICTE website.
+    </div>
+  </div>
+</footer>
 
 <!-- Student edit window (first 24 hours only) -->
 <div id="editModal" class="hidden fixed inset-0 z-50 bg-ink/60 overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="e-heading">
@@ -914,6 +966,7 @@ ${c.category}, AICTE`;
     try { sessionStorage.setItem("aicteSession", JSON.stringify(sess)); } catch (_) {}
     const isAdmin = sess.role === "admin";
     $("login").classList.add("hidden");
+    $("helpline").classList.add("hidden");
     $("app").classList.remove("hidden");
     $("whoText").classList.remove("hidden");
     $("logout").classList.remove("hidden");
@@ -937,6 +990,7 @@ ${c.category}, AICTE`;
     $("whoText").classList.add("hidden");
     $("logout").classList.add("hidden");
     $("login").classList.remove("hidden");
+    $("helpline").classList.remove("hidden");
     $("loginForm").reset();
     pickRole("student");
   }
